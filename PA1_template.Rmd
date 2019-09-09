@@ -7,17 +7,18 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE}
 setwd("C:/Users/rossd/OneDrive/Documents/GitHub/RepData_PeerAssessment1")
 unzip("activity.zip")
 data <- read.csv("activity.csv")
+require(tidyverse)
 ```
 
 
 
 ## What is mean total number of steps taken per day?
-```{r}
-require(tidyverse)
+```{r, echo=FALSE}
+
 daily.steps<-group_by(data, date)%>%
   summarize(Steps = sum(steps, na.rm = TRUE))
 data.na.rm <- filter(data, !is.na(steps))
@@ -34,7 +35,7 @@ The figure above displays the absolute number of steps recorded each day. The me
 
 
 ## What is the average daily activity pattern?
-```{r}
+```{r, echo=FALSE}
 interval.data <- group_by(data, interval)%>%
   summarize(steps = mean(steps, na.rm = TRUE))
 max.interval.steps <- interval.data[which(interval.data$steps == max(interval.data$steps)),]
@@ -45,11 +46,11 @@ plot(x = interval.data$interval, y = interval.data$steps,
      xlab = "Minute",
      ylab = "Number of Steps")
 ```
-The figure above displays the average number of steps recorded at different times of the day. The largest average number of steps per five minute interval is `r max.interval.steps$steps[[1]]` recorded at `r max.interval.steps$interval[[1]]`
+  The figure above displays the average number of steps recorded at different times of the day. The largest average number of steps per five minute interval is `r max.interval.steps$steps[[1]]` recorded at `r max.interval.steps$interval[[1]]`
 
 
 ## Imputing missing values
-```{r}
+```{r, echo=FALSE}
 missing.value.sum <- sum(is.na(data$steps))
 interval.average.data <- group_by(data, interval)%>%
   summarize(steps = median(steps, na.rm = TRUE))
@@ -74,12 +75,12 @@ imputed.mean.steps <- mean(imputed.daily.steps$Steps)
 imputed.median.steps <- median(imputed.daily.steps$Steps)
 
 ```
-The figure above mimics the first figure displayed in this paper with one key difference: missing values have been imputed using the median number of steps recorded at that time of day. This has shifted the mean steps taken per day from `r mean.steps` to `r imputed.mean.steps` and the median from `r median.steps` to `r imputed.median.steps`
+  The figure above mimics the first figure displayed in this paper with one key difference: missing values have been imputed using the median number of steps recorded at that time of day. This has shifted the mean steps taken per day from `r mean.steps` to `r imputed.mean.steps` and the median from `r median.steps` to `r imputed.median.steps`
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+```{r, echo=FALSE}
 weekday.data <- imputed.data
 weekday.data$date <- as.Date(weekday.data$date)
 weekday.data$weekday <- case_when(weekdays(weekday.data$date) == "Saturday" ~ "Weekend",
