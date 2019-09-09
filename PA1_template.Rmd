@@ -7,19 +7,106 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r, echo=FALSE}
+setwd("C:/Users/rossd/OneDrive/Documents/GitHub/RepData_PeerAssessment1")
+unzip("activity.zip")
+data <- read.csv("activity.csv")
+```
 
 
 
 ## What is mean total number of steps taken per day?
-
+```{r}
+require(tidyverse)
+daily.steps<-group_by(data, date)%>%
+  summarize(Steps = sum(steps, na.rm = TRUE))
+data.na.rm <- filter(data, !is.na(steps))
+mean.steps <- mean(daily.steps$Steps)
+median.steps <- median(daily.steps$Steps)
+hist.data <- data.frame(date = as.Date(rep(data.na.rm$date, data.na.rm$steps)))  
+ggplot(hist.data, aes(x = date))+
+  geom_histogram(binwidth = 1)+
+  ggtitle("Steps taken per day") +
+  xlab("Date") +
+  ylab("Number of Steps")
+```
+The figure above displays the absolute number of steps recorded each day. The mean number of steps per day is `r mean.steps` while the median number is `r median.steps`
 
 
 ## What is the average daily activity pattern?
-
+```{r}
+interval.data <- group_by(data, interval)%>%
+  summarize(steps = mean(steps, na.rm = TRUE))
+max.interval.steps <- interval.data[which(interval.data$steps == max(interval.data$steps)),]
+plot(x = interval.data$interval, y = interval.data$steps,
+     type = "l",
+     main = "Steps Over Time averaged across Days",
+     sub = "Recorded in 5 min intervals",
+     xlab = "Minute",
+     ylab = "Number of Steps")
+```
+The figure above displays the average number of steps recorded at different times of the day. The largest average number of steps per five minute interval is `r max.interval.steps$steps[[1]]` recorded at `r max.interval.steps$interval[[1]]`
 
 
 ## Imputing missing values
+```{r}
+missing.value.sum <- sum(is.na(data$steps))
+interval.average.data <- group_by(data, interval)%>%
+  summarize(steps = median(steps, na.rm = TRUE))
+missing.values <- which(is.na(data$steps))
+imputed.data <- data
+for (i in missing.values) {
+  imputed.data$steps[i]<- interval.average.data$steps[interval.average.data$interval==imputed.data$interval[i]]
+  
+}
 
+imputed.hist.data <- data.frame(date = as.Date(rep(imputed.data$date, imputed.data$steps)))  
+ggplot(imputed.hist.data, aes(x = date))+
+  geom_histogram(binwidth = 1)+
+  ggtitle("Steps taken per day", subtitle = "missing data imputed from median at that time interval") +
+  xlab("Date") +
+  ylab("Number of Steps")
+
+imputed.daily.steps<-group_by(imputed.data, date)%>%
+  summarize(Steps = sum(steps, na.rm = FALSE))
+
+imputed.mean.steps <- mean(imputed.daily.steps$Steps)
+imputed.median.steps <- median(imputed.daily.steps$Steps)
+
+```
+The figure above mimics the first figure displayed in this paper with one key difference: missing values have been imputed using the median number of steps recorded at that time of day. This has shifted the mean steps taken per day from `r mean.steps` to `r imputed.mean.steps` and the median from `r median.steps` to `r imputed.median.steps`
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+weekday.data <- imputed.data
+weekday.data$date <- as.Date(weekday.data$date)
+weekday.data$weekday <- case_when(weekdays(weekday.data$date) == "Saturday" ~ "Weekend",
+                                  weekdays(weekday.data$date) == "Sunday" ~ "Weekend",
+                                  TRUE ~ "Weekday") %>%
+  as.factor()
+weekend.data <- weekday.data %>%
+  filter(weekday == "Weekend") %>%
+  group_by(interval)%>%
+  summarize(steps = mean(steps))
+weekday.data <- weekday.data %>%
+  filter(weekday == "Weekday")%>%
+  group_by(interval)%>%
+  summarize(steps = mean(steps))
+
+par(mfrow = c(1,2))
+plot(weekday.data$interval, weekday.data$steps,
+     main = "Average Steps Taken",
+     sub = "Weekdays Only",
+     type= "l",
+     xlab = "Time Interval",
+     ylab = "Steps Taken")
+plot(weekend.data$interval, weekend.data$steps,
+     main = "Average Steps Taken",
+     sub = "Weekends Only",
+     type = "l",
+     xlab = "Time Interval",
+     ylab = "Steps Taken")
+```
+
