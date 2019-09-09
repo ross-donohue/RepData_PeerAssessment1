@@ -95,7 +95,7 @@ weekday.data <- weekday.data %>%
   group_by(interval)%>%
   summarize(steps = mean(steps))
 
-par(mfrow = c(1,2))
+par(mfrow = c(2,1))
 plot(weekday.data$interval, weekday.data$steps,
      main = "Average Steps Taken",
      sub = "Weekdays Only",
